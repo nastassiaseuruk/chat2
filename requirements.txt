@@ -1,0 +1,12 @@
+flask
+Flask-SocketIO
+psycopg2
+flask-sqlalchemy
+flask-migrate
+eventlet
+Flask-WTF
+werkzeug
+flask_login
+flask-mail
+pyjwt
+pudb
