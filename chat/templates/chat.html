@@ -1,0 +1,64 @@
+{% extends "index.html" %}
+
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+    <table>
+        <tr valign="top">
+            <td><img src="{{ current_user.avatar(128) }}"></td>
+            <td><h1>User: {{ current_user.username }}</h1></td>
+    </table>
+    <hr>
+<div class="message_holder">
+    {% for message in messages %}
+    <span>
+        <p>{{ message.user }}: {{ message }}</p>
+      {% if message.user.id == current_user.id %}
+       <a href="{{ url_for('message_delete', id=message.id ) }}">Delete</a>
+    {% endif %}
+    </span>
+    {% endfor %}
+</div>
+        {% endif %}
+
+    <form action="" method="POST">
+            <input type="text" class="message" placeholder="Messages"/>
+            <input type="submit"/>
+    </form>
+
+    <div>
+    <p>Top 5 active users: </p>
+    {% for user in active5users %}
+    <p> {{ user.username }}</p>
+    {% endfor %}
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script type="text/javascript">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on( 'connect', function() {
+        socket.emit( 'user joined');
+
+      socket.on('enter chat', function (json) {
+          $( 'div.message_holder' ).append( '<div><b style="color: #000">'+json.message +'</div>' )
+
+      })    ;
+        var form = $( 'form' ).on('submit', function( e ) {
+          e.preventDefault();
+
+          let user_input =$( 'input.message' ).val()
+          socket.emit( 'my event', {
+            message : user_input
+          } );
+          $( 'input.message' ).val( '' ).focus()
+        } )
+      } );
+      socket.on( 'my response', function( msg ) {
+        console.log( msg );
+        $( 'div.message_holder' ).append( '<div>'+ msg.username + ': ' + msg.message+'</div>' );
+        }
+      )
+    </script>
+{% endblock %}

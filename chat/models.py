@@ -15,6 +15,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String)
     password = db.Column(db.String)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    messages = db.relationship('Message', backref='user', lazy=True)
+
+    def __str__(self):
+        return self.username or ""
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -46,20 +50,44 @@ class User(UserMixin, db.Model):
         return User.query.get(id)
 
 
+class FilteredWords(db.Model):
+    __tablename__ = 'filteredwords'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    word = db.Column(db.String)
+
+
 class Message(db.Model):
     __tablename__ = 'messages'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.Text)
-    users_id = db.Column(
+    user_id = db.Column(
         db.Integer,
         db.ForeignKey('users.id', onupdate='CASCADE', ondelete='CASCADE'),
         index=True,
         nullable=False,
     )
+    deleted = db.Column(db.Boolean, default=False)
 
     def validate(self):
-        return
+        import pudb;pu.db
+        splited_words = self.text.split()
+        filtered_words = FilteredWords.query.all()
+        for sw in splited_words:
+            for fw in filtered_words:
+                if fw == sw:
+                    sw = "***"
+                else:
+                    continue
+        self.text = splited_words.join('')
+        self.save()
+
+    def delete(self):
+        self.deleted = True
+
+    def __str__(self):
+        return self.text or ""
 
         
 class FilteredWords(db.Model):
